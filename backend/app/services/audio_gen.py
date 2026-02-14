@@ -35,6 +35,8 @@ class DialogueAudioGenerator:
             wav_file.setframerate(_SAMPLE_RATE)
             wav_file.writeframes(samples.tobytes())
         return output_path
+        except Exception:
+            logger.exception('F5-TTS unavailable; using silence fallback wav generator')
 
     def synthesize(self, text: str, output_path: Path) -> Path:
         output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -44,6 +46,15 @@ class DialogueAudioGenerator:
             return output_path
 
         return self._write_silence(text=text, output_path=output_path)
+        sr = 22050
+        duration = max(2, min(15, len(text) // 12))
+        samples = np.zeros(sr * duration, dtype=np.int16)
+        with wave.open(str(output_path), 'w') as f:
+            f.setnchannels(1)
+            f.setsampwidth(2)
+            f.setframerate(sr)
+            f.writeframes(samples.tobytes())
+        return output_path
 
 
 audio_generator = DialogueAudioGenerator()
