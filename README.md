@@ -30,7 +30,7 @@ This repository currently contains the backend implementation under `backend/`, 
 
 ## Quick Start
 
-1. Go to backend directory:
+1. Move to backend directory:
 
 ```bash
 cd backend
@@ -41,6 +41,16 @@ cd backend
 - [`backend/README.md`](backend/README.md)
 
 That guide includes Linux/macOS/Windows setup, environment variables, PostgreSQL + Redis bootstrapping, worker startup, and troubleshooting.
+
+## Conflict Resolution Status
+
+The known conflicts for this branch were reconciled in:
+
+- `README.md`
+- `backend/app/main.py`
+- `backend/app/services/audio_gen.py`
+
+Current files contain no Git conflict markers.
 
 ## Notes
 
