@@ -5,6 +5,9 @@ import uuid
 
 from fastapi import Depends, FastAPI, HTTPException
 from sqlalchemy.exc import SQLAlchemyError
+import uuid
+
+from fastapi import Depends, FastAPI, HTTPException
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
@@ -37,11 +40,19 @@ def _initialize_database_schema() -> None:
 def startup_init() -> None:
     _initialize_database_schema()
 
+app = FastAPI(title=settings.app_name)
+Base.metadata.create_all(bind=engine)
+
 
 @app.post('/v1/renders', response_model=CreateRenderResponse)
 async def create_render(payload: CreateRenderRequest, db: Session = Depends(get_db)):
     task = render_video_task.delay(payload.prompt, payload.face_reference_image)
     job = RenderJob(celery_task_id=task.id, prompt=payload.prompt, status='queued')
+    job = RenderJob(
+        celery_task_id=task.id,
+        prompt=payload.prompt,
+        status='queued',
+    )
     db.add(job)
     db.commit()
     return CreateRenderResponse(job_id=task.id, status='queued')
