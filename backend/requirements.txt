@@ -1,0 +1,16 @@
+fastapi
+uvicorn
+celery[redis]
+redis
+sqlalchemy
+psycopg[binary]
+boto3
+ffmpeg-python
+torch
+transformers
+diffusers
+bitsandbytes
+accelerate
+pydantic-settings
+requests
+numpy
