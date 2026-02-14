@@ -1,5 +1,10 @@
 from __future__ import annotations
 
+import logging
+import uuid
+
+from fastapi import Depends, FastAPI, HTTPException
+from sqlalchemy.exc import SQLAlchemyError
 import uuid
 
 from fastapi import Depends, FastAPI, HTTPException
@@ -14,6 +19,26 @@ from celery_worker import render_video_task
 
 settings = get_settings()
 setup_logging(settings.log_level)
+logger = logging.getLogger(__name__)
+
+app = FastAPI(title=settings.app_name)
+
+
+def _initialize_database_schema() -> None:
+    """Try to create DB schema and keep API process alive on connectivity errors."""
+    try:
+        Base.metadata.create_all(bind=engine)
+        logger.info('Database schema initialization complete')
+    except SQLAlchemyError:
+        logger.exception(
+            'Database initialization failed; API will start but DB-backed routes may fail '
+            'until DB is reachable'
+        )
+
+
+@app.on_event('startup')
+def startup_init() -> None:
+    _initialize_database_schema()
 
 app = FastAPI(title=settings.app_name)
 Base.metadata.create_all(bind=engine)
@@ -22,6 +47,7 @@ Base.metadata.create_all(bind=engine)
 @app.post('/v1/renders', response_model=CreateRenderResponse)
 async def create_render(payload: CreateRenderRequest, db: Session = Depends(get_db)):
     task = render_video_task.delay(payload.prompt, payload.face_reference_image)
+    job = RenderJob(celery_task_id=task.id, prompt=payload.prompt, status='queued')
     job = RenderJob(
         celery_task_id=task.id,
         prompt=payload.prompt,
