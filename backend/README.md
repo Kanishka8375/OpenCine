@@ -213,6 +213,24 @@ Fix by starting Postgres (Docker or native), then retry `uvicorn`.
 ### 5) Large model downloads are huge
 `torch`, diffusion models, and quantized backends are large; first install/start may take significant time and disk.
 
+### 6) `SyntaxError` in `app/services/audio_gen.py` (like `except Exception:`)
+This usually means your local file is stale/corrupted from an older conflicting checkout.
+
+Run these commands from `backend/`:
+
+```bash
+git pull
+source .venv/bin/activate
+python -m compileall app/services/audio_gen.py
+```
+
+If compile still fails, restore just that file from git and retry:
+
+```bash
+git checkout -- app/services/audio_gen.py
+python -m compileall app/services/audio_gen.py
+```
+
 ---
 
 ## Production notes
